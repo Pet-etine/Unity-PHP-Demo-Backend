@@ -1,0 +1,28 @@
+{
+    "scores": [
+        {
+            "id": 1,
+            "playername": "Matti",
+            "score": 100,
+            "playtime": "2020-11-21 09:10:00"
+        },
+        {
+            "id": 2,
+            "playername": "Henkka",
+            "score": 120,
+            "playtime": "2020-11-21 09:11:00"
+        },
+        {
+            "id": 3,
+            "playername": "Ismo",
+            "score": 140,
+            "playtime": "2020-11-21 09:12:00"
+        },
+        {
+            "id": 4,
+            "playername": "Olli",
+            "score": 160,
+            "playtime": "2020-11-21 09:13:00"
+        }
+    ]
+}
