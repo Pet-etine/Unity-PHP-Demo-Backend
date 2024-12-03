@@ -21,5 +21,8 @@ INSERT INTO HIGHSCORES (playername, score) VALUES ("Henkka K", 150);
 INSERT INTO HIGHSCORES (playername, score) VALUES ("Ismo J", 70);  
 INSERT INTO HIGHSCORES (playername, score) VALUES ("Matti W", 90); 
 
+INSERT INTO HIGHSCORES (playername, score) VALUES ("Hessu", 95); 
 
 SELECT * FROM HIGHSCORES ORDER BY score DESC LIMIT 3;
+
+SELECT * FROM HIGHSCORES WHERE playername = "Hessu";
