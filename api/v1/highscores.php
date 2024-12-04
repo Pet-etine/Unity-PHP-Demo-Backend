@@ -24,26 +24,33 @@ class HighScores
 
         return true;
     }
-    function insertHighScore($playername, $score)
+
+    function insertHighScore($playername, $hits, $accuracy, $playtime)
     {
         if ($this->conn) {
-            $pn = filter_var($playername, FILTER_SANITIZE_STRING);
-            $sc = filter_var($score, FILTER_VALIDATE_INT);
-            if ($pn && $sc) {
-                $sql = 'INSERT INTO HIGHSCORES (playername, score) VALUES ("' . $pn . '",' . $sc . ')';
-                if ($this->conn->query($sql) === TRUE) {
+            // Sanitize inputs
+            $pn = htmlspecialchars($playername, ENT_QUOTES, 'UTF-8');
+            $ht = filter_var($hits, FILTER_VALIDATE_INT);
+            $acc = filter_var($accuracy, FILTER_VALIDATE_FLOAT);
+            $pt = filter_var($playtime, FILTER_VALIDATE_INT);
+
+            if ($pn && $ht !== false && $acc !== false && $pt !== false) {
+                // Use prepared statements to prevent SQL injection
+                $stmt = $this->conn->prepare("INSERT INTO HIGHSCORES (playername, hits, accuracy, playtime) VALUES (?, ?, ?, ?)");
+                $stmt->bind_param("sidi", $pn, $ht, $acc, $pt); // "sidi" means string, int, double, int
+                if ($stmt->execute()) {
                     return 'OK';
                 } else {
-
                     return "Error inserting high score: " . $this->conn->error;
                 }
             } else {
-                return 'Parameters cannot be empty';
+                return 'Parameters cannot be empty or invalid';
             }
         } else {
             return 'DB connection error';
         }
     }
+
 
     function closeConnection()
     {
@@ -52,58 +59,58 @@ class HighScores
             $this->conn = null;
         }
     }
+
     function queryHighScores()
     {
         if ($this->conn) {
-            $reply = array("scores" => array());
-
+            $reply = array("status" => "OK", "scores" => array());
             $sql = "SELECT id, playername, score FROM HIGHSCORES ORDER BY score DESC LIMIT 3";
+
             if (($result = $this->conn->query($sql))) {
                 while ($row = $result->fetch_assoc()) {
                     $reply["scores"][] = $row;
                 }
-                return $reply; // Return the $reply array here
             } else {
                 $reply['status'] = "Error";
                 $reply['msg'] = "Error fetching high scores: " . $this->conn->error;
-                return $reply;
             }
-        } else {
-            $reply['status'] = "Error";
-            $reply['msg'] = "DB connection not open";
+
             return $reply;
+        } else {
+            return array("status" => "Error", "msg" => "DB connection not open");
         }
     }
-    // Create the HighScores object 
 }
 
 $hs = new HighScores();
 
 header('Content-Type: application/json');
 
-if ($_SERVER['REQUEST_METHOD'] === 'GET') {
-    $response = $hs->queryHighScores();
-    echo json_encode($response);
-} else if ($_SERVER['REQUEST_METHOD'] === 'POST') { // Use else if here
-    $data = file_get_contents('php://input');
-    $hsItem = json_decode($data, true); // No need for urldecode
+// Handle the POST request and get the raw POST data
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    // Read the raw POST data (JSON input)
+    $inputData = file_get_contents('php://input');
 
-    // Check if playername and score are set
-    if (isset($hsItem['playername']) && isset($hsItem['score'])) {
-        $ret = $hs->insertHighScore($hsItem['playername'], $hsItem['score']);
+    // Decode the JSON data
+    $data = json_decode($inputData, true); // true returns associative array
+
+    if (isset($data['playername'], $data['score'], $data['accuracy'], $data['playtime'])) {
+        $playername = $data['playername'];
+        $score = $data['score'];
+        $accuracy = $data['accuracy'];
+        $playtime = $data['playtime'];
+
+        // Insert high score
+        $ret = $hs->insertHighScore($playername, $score, $accuracy, $playtime);
         $response["status"] = $ret;
-        $response["dbg"] = "POST received: " . $hsItem['playername'] . ': ' . $hsItem['score'];
+        $response["dbg"] = "POST received: Player: $playername, Score: $score, Accuracy: $accuracy, Playtime: $playtime";
     } else {
+        // Missing required fields in POST data
         $response["status"] = "Error";
-        $response["dbg"] = "Missing playername or score in POST data"; // More specific error message
+        $response["dbg"] = "Missing fields in POST data";
     }
 
-    echo json_encode($response);
-} else {
-    // Handle requests that are not GET
-    $response['status'] = 'Error';
-    $response['message'] = 'Invalid request method';
-    echo json_encode($response);
+    echo json_encode($response);  // Return the JSON response
 }
 
 $hs->closeConnection();

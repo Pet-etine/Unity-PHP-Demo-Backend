@@ -1,28 +1,7 @@
-SHOW DATABASES;
-
-CREATE DATABASE IF NOT EXISTS HIGHSCORES;
-
-USE HIGHSCORES;
-
-SHOW TABLES;
-
-
-CREATE TABLE IF NOT EXISTS HIGHSCORES (  
+CREATE TABLE IF NOT EXISTS highscores (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    playername VARCHAR(255), 
-    score DECIMAL(7,2),
-    playtime DATETIME DEFAULT CURRENT_TIMESTAMP
+    playername VARCHAR(255) NOT NULL,
+    hits INT NOT NULL,         -- Stores the number of hits (mandatory)
+    accuracy DECIMAL(5, 2),    -- Stores accuracy as a percentage (e.g., 85.50%)
+    playtime INT               -- Stores playtime in seconds or minutes
 );
-
-DESCRIBE HIGHSCORES;
-
-INSERT INTO HIGHSCORES (playername, score) VALUES ("Olli K", 50);  
-INSERT INTO HIGHSCORES (playername, score) VALUES ("Henkka K", 150); 
-INSERT INTO HIGHSCORES (playername, score) VALUES ("Ismo J", 70);  
-INSERT INTO HIGHSCORES (playername, score) VALUES ("Matti W", 90); 
-
-INSERT INTO HIGHSCORES (playername, score) VALUES ("Hessu", 95); 
-
-SELECT * FROM HIGHSCORES ORDER BY score DESC LIMIT 3;
-
-SELECT * FROM HIGHSCORES WHERE playername = "Hessu";
